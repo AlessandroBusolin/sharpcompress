@@ -74,18 +74,10 @@ public partial class SevenZipWriter : AbstractWriter
         }
 
         // Compress file data to output stream
-        // TODO: LZMA2 encoding is not yet implemented in SharpCompress's LzmaStream
-        if (sevenZipOptions.IsLzma2)
-        {
-            throw new ArchiveOperationException(
-                "LZMA2 encoding is not yet implemented. Use LZMA (IsLzma2 = false) instead."
-            );
-        }
-
         var compressor = new SevenZipStreamsCompressor(OutputStream.NotNull());
         var packed = compressor.Compress(
             progressStream,
-            isLzma2: false,
+            isLzma2: sevenZipOptions.IsLzma2,
             sevenZipOptions.LzmaProperties
         );
         packedStreams.Add(packed);

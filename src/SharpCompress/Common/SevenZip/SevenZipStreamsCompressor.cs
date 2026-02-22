@@ -37,22 +37,52 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         LzmaEncoderProperties? encoderProperties = null
     )
     {
-        encoderProperties ??= new LzmaEncoderProperties(eos: true);
+        encoderProperties ??= new LzmaEncoderProperties(eos: !isLzma2);
 
         var outStartOffset = outputStream.Position;
-        var inStartOffset = inputStream.CanSeek ? inputStream.Position : 0L;
 
         // Wrap the output stream in CRC calculator
         using var outCrcStream = new Crc32Stream(outputStream);
 
-        // Create LZMA encoder writing to CRC-wrapped output
-        using var lzmaStream = LzmaStream.Create(encoderProperties, isLzma2, outCrcStream);
-        var properties = lzmaStream.Properties;
+        byte[] properties;
+
+        if (isLzma2)
+        {
+            // LZMA2: use Lzma2EncoderStream for chunk-based framing
+            using var lzma2Stream = new Lzma2EncoderStream(
+                outCrcStream,
+                encoderProperties.DictionarySize,
+                encoderProperties.NumFastBytes
+            );
+
+            // Copy input through the LZMA2 encoder while computing input CRC
+            CopyWithCrc(inputStream, lzma2Stream, out var inputCrc2, out var inputSize2);
+
+            // Flush/finalize (writes remaining buffer + end marker)
+            lzma2Stream.Dispose();
+
+            var compressedSize2 = (ulong)(outputStream.Position - outStartOffset);
+            var uncompressedSize2 = (ulong)inputSize2;
+            var outputCrc2 = outCrcStream.Crc;
+
+            properties = lzma2Stream.Properties;
+
+            return BuildPackedStream(
+                isLzma2: true,
+                properties,
+                compressedSize2,
+                uncompressedSize2,
+                inputCrc2,
+                outputCrc2
+            );
+        }
+
+        // LZMA: existing path
+        using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
+        properties = lzmaStream.Properties;
 
         // Copy input through the LZMA encoder while computing input CRC
-        uint inputCrc;
-        long inputSize;
-        CopyWithCrc(inputStream, lzmaStream, out inputCrc, out inputSize);
+        CopyWithCrc(inputStream, lzmaStream, out var inputCrc, out var inputSize);
 
         // Flush/finalize the LZMA encoder (writes remaining compressed data)
         lzmaStream.Dispose();
@@ -61,10 +91,27 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         var uncompressedSize = (ulong)inputSize;
         var outputCrc = outCrcStream.Crc;
 
-        // Build method ID
+        return BuildPackedStream(
+            isLzma2: false,
+            properties,
+            compressedSize,
+            uncompressedSize,
+            inputCrc,
+            outputCrc
+        );
+    }
+
+    private static PackedStream BuildPackedStream(
+        bool isLzma2,
+        byte[] properties,
+        ulong compressedSize,
+        ulong uncompressedSize,
+        uint inputCrc,
+        uint? outputCrc
+    )
+    {
         var methodId = isLzma2 ? CMethodId.K_LZMA2 : CMethodId.K_LZMA;
 
-        // Build folder metadata
         var folder = new CFolder();
         folder._coders.Add(
             new CCoderInfo
