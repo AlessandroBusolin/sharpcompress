@@ -43,7 +43,7 @@ public static partial class ReaderFactory
     {
         options ??= ReaderOptions.ForOwnedFile;
         var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
-        return await OpenAsyncReader(stream, options, cancellationToken);
+        return await OpenAsyncReader(stream, options, cancellationToken).ConfigureAwait(false);
     }
 
     public static async ValueTask<IAsyncReader> OpenAsyncReader(

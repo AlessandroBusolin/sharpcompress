@@ -43,11 +43,12 @@ public static class WriterFactory
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return await OpenAsyncWriter(
-            new FileInfo(filePath),
-            archiveType,
-            writerOptions,
-            cancellationToken
-        );
+                new FileInfo(filePath),
+                archiveType,
+                writerOptions,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public static async ValueTask<IAsyncWriter> OpenAsyncWriter(
@@ -60,11 +61,12 @@ public static class WriterFactory
         fileInfo.NotNull(nameof(fileInfo));
         var stream = fileInfo.OpenAsyncWriteStream(cancellationToken);
         return await OpenAsyncWriter(
-            stream,
-            archiveType,
-            writerOptions.WithLeaveStreamOpen(false),
-            cancellationToken
-        );
+                stream,
+                archiveType,
+                writerOptions.WithLeaveStreamOpen(false),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public static IWriter OpenWriter(
@@ -106,7 +108,9 @@ public static class WriterFactory
 
         if (factory != null)
         {
-            return await factory.OpenAsyncWriter(stream, writerOptions, cancellationToken);
+            return await factory
+                .OpenAsyncWriter(stream, writerOptions, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);

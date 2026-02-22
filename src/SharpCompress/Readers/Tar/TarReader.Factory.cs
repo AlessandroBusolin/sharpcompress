@@ -141,7 +141,8 @@ public partial class TarReader
     {
         readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
         var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
-        return await OpenAsyncReader(stream, readerOptions, cancellationToken);
+        return await OpenAsyncReader(stream, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)

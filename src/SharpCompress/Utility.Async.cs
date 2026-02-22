@@ -133,7 +133,7 @@ internal static partial class Utility
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-#if !LEGACY_DOTNET
+#if NET8_0_OR_GREATER
         // Use File.OpenHandle with async options for .NET 8.0+
         var handle = File.OpenHandle(
             path,
@@ -144,7 +144,7 @@ internal static partial class Utility
         );
         return new FileStream(handle, FileAccess.Write);
 #else
-        // For legacy .NET, use FileStream constructor with async options
+        // For older target frameworks, use FileStream constructor with async options
         return new FileStream(
             path,
             FileMode.Create,
@@ -185,7 +185,7 @@ internal static partial class Utility
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-#if !LEGACY_DOTNET
+#if NET8_0_OR_GREATER
         // Use File.OpenHandle with async options for .NET 8.0+
         var handle = File.OpenHandle(
             path,
@@ -196,7 +196,7 @@ internal static partial class Utility
         );
         return new FileStream(handle, FileAccess.Read);
 #else
-        // For legacy .NET, use FileStream constructor with async options
+        // For older target frameworks, use FileStream constructor with async options
         return new FileStream(
             path,
             FileMode.Open,
