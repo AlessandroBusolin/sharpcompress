@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -163,6 +163,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             }
 
             var folder = entry.FilePart.Folder;
+
+            // If folder is null (empty stream entry), return empty stream
+            if (folder is null)
+            {
+                return CreateEntryStream(Stream.Null);
+            }
 
             // Check if we're starting a new folder - dispose old folder stream if needed
             if (folder != _currentFolder)

@@ -81,7 +81,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
+        await using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             var path = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
             await writer.WriteAsync(path, path);

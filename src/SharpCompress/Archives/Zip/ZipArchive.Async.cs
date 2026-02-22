@@ -55,7 +55,12 @@ public partial class ZipArchive
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s),
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    ReaderOptions.Providers
+                                ),
                                 ReaderOptions
                             );
                         }
@@ -79,10 +84,7 @@ public partial class ZipArchive
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new ZipWriter(
-            stream,
-            options as ZipWriterOptions ?? new ZipWriterOptions(options)
-        );
+        using var writer = new ZipWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

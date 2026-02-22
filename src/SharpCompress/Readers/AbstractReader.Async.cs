@@ -43,7 +43,10 @@ public abstract partial class AbstractReader<TEntry, TVolume>
         }
         if (_entriesForCurrentReadStreamAsync is null)
         {
-            return await LoadStreamForReadingAsync(RequestInitialStream()).ConfigureAwait(false);
+            return await LoadStreamForReadingAsync(
+                    await RequestInitialStreamAsync(cancellationToken).ConfigureAwait(false)
+                )
+                .ConfigureAwait(false);
         }
         if (!_wroteCurrentEntry)
         {
@@ -123,10 +126,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             );
         }
 
-        if (writableStream is null)
-        {
-            throw new ArgumentNullException(nameof(writableStream));
-        }
+        ThrowHelper.ThrowIfNull(writableStream);
         if (!writableStream.CanWrite)
         {
             throw new ArgumentException(

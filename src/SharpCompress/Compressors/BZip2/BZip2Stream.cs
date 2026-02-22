@@ -3,10 +3,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed partial class BZip2Stream : Stream
+public sealed partial class BZip2Stream : Stream, IFinishable
 {
     private Stream stream = default!;
     private bool isDisposed;
@@ -54,6 +55,7 @@ public sealed partial class BZip2Stream : Stream
     {
         if (isDisposed || leaveOpen)
         {
+            base.Dispose(disposing);
             return;
         }
         isDisposed = true;
@@ -61,6 +63,7 @@ public sealed partial class BZip2Stream : Stream
         {
             stream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     public CompressionMode Mode { get; private set; }

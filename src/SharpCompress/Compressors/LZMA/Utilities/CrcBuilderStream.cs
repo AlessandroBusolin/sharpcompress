@@ -1,9 +1,8 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using SharpCompress.Common;
 
-namespace SharpCompress.Compressors.LZMA.Utilites;
+namespace SharpCompress.Compressors.LZMA.Utilities;
 
 internal partial class CrcBuilderStream : Stream
 {
@@ -59,7 +58,7 @@ internal partial class CrcBuilderStream : Stream
     }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        throw new InvalidOperationException();
+        throw new ArchiveOperationException();
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
@@ -69,7 +68,7 @@ internal partial class CrcBuilderStream : Stream
     {
         if (_mFinished)
         {
-            throw new InvalidOperationException("CRC calculation has been finished.");
+            throw new ArchiveOperationException("CRC calculation has been finished.");
         }
 
         Processed += count;

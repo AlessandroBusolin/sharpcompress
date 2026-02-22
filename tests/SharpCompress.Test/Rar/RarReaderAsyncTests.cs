@@ -57,7 +57,7 @@ public class RarReaderAsyncTests : ReaderTests
 
     [Fact]
     public async ValueTask Rar_Multi_Reader_Encrypted_Async() =>
-        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
         {
             string[] archives =
             [
@@ -212,7 +212,9 @@ public class RarReaderAsyncTests : ReaderTests
                         var file = Path.GetFileName(reader.Entry.Key).NotNull();
                         var folder =
                             Path.GetDirectoryName(reader.Entry.Key)
-                            ?? throw new ArgumentNullException();
+                            ?? throw new InvalidOperationException(
+                                "Entry key must have a directory name."
+                            );
                         var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                         if (!Directory.Exists(destdir))
                         {

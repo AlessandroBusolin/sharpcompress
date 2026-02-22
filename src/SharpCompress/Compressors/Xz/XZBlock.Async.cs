@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -117,7 +115,7 @@ public sealed partial class XZBlock
             .ConfigureAwait(false);
         if (read != BlockHeaderSize - 5)
         {
-            throw new EndOfStreamException("Reached end of stream unexpectedly");
+            throw new IncompleteArchiveException("Reached end of stream unexpectedly");
         }
 
         var crc = await BaseStream

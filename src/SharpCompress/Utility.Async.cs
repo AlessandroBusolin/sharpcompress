@@ -20,15 +20,16 @@ internal static partial class Utility
             CancellationToken cancellationToken = default
         )
         {
+#if LEGACY_DOTNET
             if (source is null)
             {
-                throw new ArgumentNullException(nameof(source));
+                throw new ArgumentNullException();
             }
+#else
+            ThrowHelper.ThrowIfNull(source);
+#endif
 
-            if (buffer is null)
-            {
-                throw new ArgumentNullException(nameof(buffer));
-            }
+            ThrowHelper.ThrowIfNull(buffer);
 
             if (offset < 0 || offset > buffer.Length)
             {
@@ -47,7 +48,7 @@ internal static partial class Utility
                     .ConfigureAwait(false);
                 if (fetched <= 0)
                 {
-                    throw new EndOfStreamException();
+                    throw new IncompleteArchiveException("Unexpected end of stream.");
                 }
 
                 offset += fetched;

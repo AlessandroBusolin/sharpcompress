@@ -7,6 +7,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors;
 
 namespace SharpCompress.Readers.Zip;
 
@@ -62,7 +63,7 @@ public partial class ZipReader
         }
 
         public ZipEntry Current =>
-            _current ?? throw new InvalidOperationException("No current entry is available.");
+            _current ?? throw new ArchiveOperationException("No current entry is available.");
 
         /// <summary>
         /// Advances to the next non-directory entry-relevant header and materializes a <see cref="ZipEntry"/>,
@@ -77,7 +78,11 @@ public partial class ZipReader
                 {
                     case ZipHeaderType.LocalEntry:
                         _current = new ZipEntry(
-                            new StreamingZipFilePart((LocalEntryHeader)header, _stream),
+                            new StreamingZipFilePart(
+                                (LocalEntryHeader)header,
+                                _stream,
+                                _options.Providers
+                            ),
                             _options
                         );
                         return true;

@@ -10,9 +10,6 @@ namespace SharpCompress.Common.Arj.Headers;
 
 public partial class ArjMainHeader : ArjHeader
 {
-    private const int FIRST_HDR_SIZE = 34;
-    private const ushort ARJ_MAGIC = 0xEA60;
-
     public ArchiveEncoding ArchiveEncoding { get; }
 
     public int ArchiverVersionNumber { get; private set; }
@@ -40,10 +37,10 @@ public partial class ArjMainHeader : ArjHeader
             archiveEncoding ?? throw new ArgumentNullException(nameof(archiveEncoding));
     }
 
-    public override ArjHeader? Read(Stream stream)
+    public override ArjHeader? Read(Stream reader)
     {
-        var body = ReadHeader(stream);
-        ReadExtendedHeaders(stream);
+        var body = ReadHeader(reader);
+        ReadExtendedHeaders(reader);
         return LoadFrom(body);
     }
 
@@ -57,7 +54,7 @@ public partial class ArjMainHeader : ArjHeader
         {
             if (offset >= headerBytes.Length)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             return (byte)(headerBytes[offset++] & 0xFF);
         }
@@ -66,7 +63,7 @@ public partial class ArjMainHeader : ArjHeader
         {
             if (offset + 1 >= headerBytes.Length)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             var v = headerBytes[offset] & 0xFF | (headerBytes[offset + 1] & 0xFF) << 8;
             offset += 2;
@@ -77,7 +74,7 @@ public partial class ArjMainHeader : ArjHeader
         {
             if (offset + 3 >= headerBytes.Length)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             long v =
                 headerBytes[offset] & 0xFF

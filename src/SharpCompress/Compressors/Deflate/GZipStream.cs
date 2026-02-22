@@ -32,6 +32,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -53,8 +55,23 @@ public partial class GZipStream : Stream
     public GZipStream(Stream stream, CompressionMode mode)
         : this(stream, mode, CompressionLevel.Default, Encoding.UTF8) { }
 
-    public GZipStream(Stream stream, CompressionMode mode, CompressionLevel level)
-        : this(stream, mode, level, Encoding.UTF8) { }
+    public GZipStream(Stream stream, CompressionMode mode, IReaderOptions readerOptions)
+        : this(stream, mode, CompressionLevel.Default, readerOptions) { }
+
+    public GZipStream(
+        Stream stream,
+        CompressionMode mode,
+        CompressionLevel level,
+        IReaderOptions readerOptions
+    )
+        : this(
+            stream,
+            mode,
+            level,
+            (
+                readerOptions ?? throw new ArgumentNullException(nameof(readerOptions))
+            ).ArchiveEncoding.GetEncoding()
+        ) { }
 
     public GZipStream(
         Stream stream,
@@ -99,6 +116,7 @@ public partial class GZipStream : Stream
             {
                 throw new ZlibException(
                     string.Format(
+                        Constants.DefaultCultureInfo,
                         "Don't be silly. {0} bytes?? Use a bigger buffer, at least {1}.",
                         value,
                         ZlibConstants.WorkingBufferSizeMin
@@ -336,7 +354,7 @@ public partial class GZipStream : Stream
             }
             else
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
         }
 
@@ -385,16 +403,24 @@ public partial class GZipStream : Stream
             {
                 return;
             }
+#if LEGACY_DOTNET
             if (_fileName.Contains('/'))
+#else
+            if (_fileName.Contains('/', StringComparison.Ordinal))
+#endif
             {
                 _fileName = _fileName.Replace('/', '\\');
             }
             if (_fileName.EndsWith('\\'))
             {
-                throw new InvalidOperationException("Illegal filename");
+                throw new ArchiveOperationException("Illegal filename");
             }
 
+#if LEGACY_DOTNET
             if (_fileName.Contains('\\'))
+#else
+            if (_fileName.Contains('\\', StringComparison.Ordinal))
+#endif
             {
                 // trim any leading path
                 _fileName = Path.GetFileName(_fileName);

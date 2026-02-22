@@ -37,7 +37,7 @@ public partial class GZipArchive
     }
 
     protected override GZipArchiveEntry CreateEntryInternal(
-        string filePath,
+        string key,
         Stream source,
         long size,
         DateTime? modified,
@@ -48,13 +48,11 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+        return new GZipWritableArchiveEntry(this, source, key, size, modified, closeStream);
     }
 
-    protected override GZipArchiveEntry CreateDirectoryEntry(
-        string directoryPath,
-        DateTime? modified
-    ) => throw new NotSupportedException("GZip archives do not support directory entries.");
+    protected override GZipArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
+        throw new NotSupportedException("GZip archives do not support directory entries.");
 
     protected override void SaveTo(
         Stream stream,
@@ -67,10 +65,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(
-            stream,
-            options as GZipWriterOptions ?? new GZipWriterOptions(options)
-        );
+        using var writer = new GZipWriter(stream, options);
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
@@ -87,7 +82,7 @@ public partial class GZipArchive
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,
-            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding),
+            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding, ReaderOptions.Providers),
             ReaderOptions
         );
     }
@@ -96,6 +91,6 @@ public partial class GZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return GZipReader.OpenReader(stream);
+        return GZipReader.OpenReader(stream, ReaderOptions);
     }
 }

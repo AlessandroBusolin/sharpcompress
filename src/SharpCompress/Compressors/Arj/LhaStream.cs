@@ -1,23 +1,24 @@
 using System;
 using System.Data;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Arj;
 
 [CLSCompliant(true)]
-public sealed partial class LhaStream<C> : Stream
-    where C : ILhaDecoderConfig, new()
+public sealed partial class LhaStream<TDecoderConfig> : Stream
+    where TDecoderConfig : ILhaDecoderConfig, new()
 {
     private readonly BitReader _bitReader;
-    private readonly Stream _stream;
 
     private readonly HuffTree _commandTree;
     private readonly HuffTree _offsetTree;
     private int _remainingCommands;
     private (int offset, int count)? _copyProgress;
     private readonly RingBuffer _ringBuffer;
-    private readonly C _config = new C();
+    private readonly TDecoderConfig _config = new TDecoderConfig();
 
     private const int NUM_COMMANDS = 510;
     private const int NUM_TEMP_CODELEN = 20;
@@ -27,7 +28,6 @@ public sealed partial class LhaStream<C> : Stream
 
     public LhaStream(Stream compressedStream, int originalSize)
     {
-        _stream = compressedStream ?? throw new ArgumentNullException(nameof(compressedStream));
         _bitReader = new BitReader(compressedStream);
         _ringBuffer = _config.RingBuffer;
         _commandTree = new HuffTree(NUM_COMMANDS * 2);
@@ -58,13 +58,10 @@ public sealed partial class LhaStream<C> : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
         if (offset < 0 || count < 0 || (offset + count) > buffer.Length)
         {
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(offset));
         }
 
         if (_producedBytes >= _originalSize)
@@ -90,7 +87,7 @@ public sealed partial class LhaStream<C> : Stream
                 len++;
                 if (len > 255)
                 {
-                    throw new InvalidOperationException("Code length overflow");
+                    throw new ArchiveOperationException("Code length overflow");
                 }
             }
         }
@@ -137,7 +134,7 @@ public sealed partial class LhaStream<C> : Stream
 
         if (numCodes > NUM_TEMP_CODELEN)
         {
-            throw new Exception("temporary codelen table has invalid size");
+            throw new InvalidFormatException("temporary codelen table has invalid size");
         }
 
         // read actual lengths
@@ -152,7 +149,7 @@ public sealed partial class LhaStream<C> : Stream
 
         if (3 + skip > numCodes)
         {
-            throw new Exception("temporary codelen table has invalid size");
+            throw new InvalidFormatException("temporary codelen table has invalid size");
         }
 
         for (int i = 3 + skip; i < numCodes; i++)
@@ -180,7 +177,7 @@ public sealed partial class LhaStream<C> : Stream
 
         if (numCodes > NUM_COMMANDS)
         {
-            throw new Exception("commands codelen table has invalid size");
+            throw new InvalidFormatException("commands codelen table has invalid size");
         }
 
         int index = 0;
@@ -222,7 +219,7 @@ public sealed partial class LhaStream<C> : Stream
 
         if (numCodes > _config.HistoryBits)
         {
-            throw new InvalidDataException("Offset code table too large");
+            throw new InvalidFormatException("Offset code table too large");
         }
 
         byte[] codeLengths = new byte[NUM_TEMP_CODELEN];

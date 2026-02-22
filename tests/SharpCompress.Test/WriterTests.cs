@@ -70,7 +70,12 @@ public class WriterTests : TestBase
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var writer = await WriterFactory.OpenAsyncWriter(stream, _type, writerOptions);
+            using var writer = WriterFactory.OpenAsyncWriter(
+                stream,
+                _type,
+                writerOptions,
+                cancellationToken
+            );
             await writer.WriteAllAsync(
                 ORIGINAL_FILES_PATH,
                 "*",
@@ -91,7 +96,8 @@ public class WriterTests : TestBase
 
             await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(SharpCompressStream.CreateNonDisposing(stream)),
-                readerOptions
+                readerOptions,
+                cancellationToken
             );
             await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -32,7 +33,7 @@ internal class Bcj2DecoderStream : DecoderStream2
             var bt = _mStream.ReadByte();
             if (bt < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             return (byte)bt;
@@ -88,13 +89,8 @@ internal class Bcj2DecoderStream : DecoderStream2
     private bool _mFinished;
     private bool _isDisposed;
 
-    public Bcj2DecoderStream(Stream[] streams, byte[] info, long limit)
+    public Bcj2DecoderStream(Stream[] streams)
     {
-        if (info != null && info.Length > 0)
-        {
-            throw new NotSupportedException();
-        }
-
         if (streams.Length != 4)
         {
             throw new NotSupportedException();
@@ -238,7 +234,7 @@ internal class Bcj2DecoderStream : DecoderStream2
                     var b0 = s.ReadByte();
                     if (b0 < 0)
                     {
-                        throw new EndOfStreamException();
+                        throw new IncompleteArchiveException("Unexpected end of stream.");
                     }
 
                     src <<= 8;

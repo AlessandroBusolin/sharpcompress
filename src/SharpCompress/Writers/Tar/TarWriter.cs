@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
@@ -31,32 +29,32 @@ public partial class TarWriter : AbstractWriter
         {
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
-        switch (options.CompressionType)
+
+        var providers = options.Providers;
+
+        destination = options.CompressionType switch
         {
-            case CompressionType.None:
-                break;
-            case CompressionType.BZip2:
-                {
-                    destination = BZip2Stream.Create(destination, CompressionMode.Compress, false);
-                }
-                break;
-            case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            case CompressionType.LZip:
-                {
-                    destination = new LZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            default:
-            {
-                throw new InvalidFormatException(
-                    "Tar does not support compression: " + options.CompressionType
-                );
-            }
-        }
+            CompressionType.None => destination,
+            CompressionType.BZip2 => providers.CreateCompressStream(
+                CompressionType.BZip2,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.GZip => providers.CreateCompressStream(
+                CompressionType.GZip,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.LZip => providers.CreateCompressStream(
+                CompressionType.LZip,
+                destination,
+                options.CompressionLevel
+            ),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + options.CompressionType
+            ),
+        };
+
         InitializeStream(destination);
     }
 
@@ -67,7 +65,11 @@ public partial class TarWriter : AbstractWriter
     {
         filename = filename.Replace('\\', '/');
 
+#if LEGACY_DOTNET
         var pos = filename.IndexOf(':');
+#else
+        var pos = filename.IndexOf(':', StringComparison.Ordinal);
+#endif
         if (pos >= 0)
         {
             filename = filename.Remove(0, pos + 1);
@@ -100,7 +102,7 @@ public partial class TarWriter : AbstractWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
-        header.Write(OutputStream);
+        header.Write(OutputStream.NotNull());
     }
 
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
@@ -117,9 +119,9 @@ public partial class TarWriter : AbstractWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
-        header.Write(OutputStream);
+        header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
-        size = progressStream.TransferTo(OutputStream, realSize);
+        size = progressStream.TransferTo(OutputStream.NotNull(), realSize);
         PadTo512(size.Value);
     }
 
@@ -127,7 +129,7 @@ public partial class TarWriter : AbstractWriter
     {
         var zeros = unchecked((int)(((size + 511L) & ~511L) - size));
 
-        OutputStream.Write(stackalloc byte[zeros]);
+        OutputStream.NotNull().Write(stackalloc byte[zeros]);
     }
 
     protected override void Dispose(bool isDisposing)
@@ -136,20 +138,12 @@ public partial class TarWriter : AbstractWriter
         {
             if (finalizeArchiveOnClose)
             {
-                OutputStream.Write(stackalloc byte[1024]);
+                OutputStream.NotNull().Write(stackalloc byte[1024]);
             }
-            switch (OutputStream)
+            // Use IFinishable interface for generic finalization
+            if (OutputStream is IFinishable finishable)
             {
-                case BZip2Stream b:
-                {
-                    b.Finish();
-                    break;
-                }
-                case LZipStream l:
-                {
-                    l.Finish();
-                    break;
-                }
+                finishable.Finish();
             }
         }
         base.Dispose(isDisposing);

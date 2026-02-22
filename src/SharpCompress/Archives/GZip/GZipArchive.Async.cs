@@ -40,10 +40,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        await using var writer = new GZipWriter(
-            stream,
-            options as GZipWriterOptions ?? new GZipWriterOptions(options)
-        );
+        await using var writer = new GZipWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -77,7 +74,7 @@ public partial class GZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)GZipReader.OpenReader(stream));
+        return new((IAsyncReader)GZipReader.OpenReader(stream, ReaderOptions));
     }
 
     protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntriesAsync(
@@ -88,7 +85,7 @@ public partial class GZipArchive
         yield return new GZipArchiveEntry(
             this,
             await GZipFilePart
-                .CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+                .CreateAsync(stream, ReaderOptions.ArchiveEncoding, ReaderOptions.Providers)
                 .ConfigureAwait(false),
             ReaderOptions
         );
