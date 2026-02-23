@@ -29,14 +29,15 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
     /// Returns a PackedStream containing folder metadata, compressed size, and CRCs.
     /// </summary>
     /// <param name="inputStream">Uncompressed data to compress.</param>
-    /// <param name="isLzma2">True for LZMA2, false for LZMA.</param>
+    /// <param name="compressionType">Compression method (LZMA or LZMA2).</param>
     /// <param name="encoderProperties">LZMA encoder properties (null for defaults).</param>
     public PackedStream Compress(
         Stream inputStream,
-        bool isLzma2,
+        CompressionType compressionType,
         LzmaEncoderProperties? encoderProperties = null
     )
     {
+        var isLzma2 = compressionType == CompressionType.LZMA2;
         encoderProperties ??= new LzmaEncoderProperties(eos: true);
 
         var outStartOffset = outputStream.Position;

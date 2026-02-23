@@ -77,7 +77,7 @@ public partial class SevenZipWriter : AbstractWriter
         var compressor = new SevenZipStreamsCompressor(OutputStream.NotNull());
         var packed = compressor.Compress(
             progressStream,
-            isLzma2: false,
+            CompressionType.LZMA,
             sevenZipOptions.LzmaProperties
         );
         packedStreams.Add(packed);
@@ -161,7 +161,7 @@ public partial class SevenZipWriter : AbstractWriter
         var headerCompressor = new SevenZipStreamsCompressor(output);
         var headerPacked = headerCompressor.Compress(
             rawHeaderStream,
-            isLzma2: false,
+            CompressionType.LZMA,
             sevenZipOptions.LzmaProperties
         );
 
