@@ -61,7 +61,11 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         // Create zip archive in memory
         using var zipStream = new MemoryStream();
         using (
-            var writer = CreateWriterWithLevelAsync(zipStream, compressionType, compressionLevel)
+            var writer = await CreateWriterWithLevelAsync(
+                zipStream,
+                compressionType,
+                compressionLevel
+            )
         )
         {
             await writer.WriteAsync($"file1_{sizeMb}MiB.txt", new MemoryStream(file1Data));
@@ -131,7 +135,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         };
 
         using (
-            var writer = WriterFactory.OpenAsyncWriter(
+            var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(zipStream),
                 ArchiveType.Zip,
                 writerOptions
@@ -198,7 +202,11 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         // Create archive with specified compression and level
         using var zipStream = new MemoryStream();
         using (
-            var writer = CreateWriterWithLevelAsync(zipStream, compressionType, compressionLevel)
+            var writer = await CreateWriterWithLevelAsync(
+                zipStream,
+                compressionType,
+                compressionLevel
+            )
         )
         {
             await writer.WriteAsync(

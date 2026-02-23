@@ -23,8 +23,8 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        await using (
-            var writer = WriterFactory.OpenAsyncWriter(
+        using (
+            var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
                 new WriterOptions(CompressionType.GZip)
