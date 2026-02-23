@@ -242,8 +242,9 @@ internal sealed class SevenZipSubStreamsInfoWriter
             }
         }
 
-        // UnPackSizes - write all except the last per folder (it's implicit from folder unpack size)
-        if (UnPackSizes.Length > 0)
+        // UnPackSizes - write all except the last per folder (it's implicit from folder unpack size).
+        // Only emit the Size block when at least one folder has multiple substreams.
+        if (UnPackSizes.Length > 0 && !allSingle)
         {
             stream.WriteByte((byte)BlockType.Size);
 

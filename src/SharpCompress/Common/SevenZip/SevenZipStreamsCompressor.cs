@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA;
@@ -90,43 +89,25 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
 
     /// <summary>
     /// Copies data from source to destination while computing CRC32 of the source data.
+    /// Uses Crc32Stream.Compute for CRC calculation to avoid duplicating the table/algorithm.
     /// </summary>
     private static void CopyWithCrc(Stream source, Stream destination, out uint crc, out long bytesRead)
     {
-        var crcValue = Crc32Stream.DEFAULT_SEED;
-        var table = InitCrcTable();
+        var seed = Crc32Stream.DEFAULT_SEED;
         var buffer = new byte[81920];
         long totalRead = 0;
 
         int read;
         while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
         {
-            // Update CRC
-            for (var i = 0; i < read; i++)
-            {
-                crcValue = (crcValue >> 8) ^ table[(crcValue ^ buffer[i]) & 0xFF];
-            }
-
+            // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
+            // so passing ~result as next seed chains correctly.
+            seed = ~Crc32Stream.Compute(Crc32Stream.DEFAULT_POLYNOMIAL, seed, buffer.AsSpan(0, read));
             destination.Write(buffer, 0, read);
             totalRead += read;
         }
 
-        crc = ~crcValue;
+        crc = ~seed;
         bytesRead = totalRead;
-    }
-
-    private static uint[] InitCrcTable()
-    {
-        var table = new uint[256];
-        for (var i = 0; i < 256; i++)
-        {
-            var entry = (uint)i;
-            for (var j = 0; j < 8; j++)
-            {
-                entry = (entry & 1) == 1 ? (entry >> 1) ^ Crc32Stream.DEFAULT_POLYNOMIAL : entry >> 1;
-            }
-            table[i] = entry;
-        }
-        return table;
     }
 }
