@@ -107,10 +107,7 @@ public partial class SevenZipWriter : AbstractWriter
     public override void WriteDirectory(string directoryName, DateTime? modificationTime)
     {
         directoryName = NormalizeFilename(directoryName);
-        if (!directoryName.EndsWith('/'))
-        {
-            directoryName += '/';
-        }
+        directoryName = directoryName.TrimEnd('/');
 
         entries.Add(
             new SevenZipWriteEntry
