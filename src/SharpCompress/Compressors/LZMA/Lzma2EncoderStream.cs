@@ -121,7 +121,7 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             compressed = CompressBlock(uncompressedData);
         }
-        catch
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
             // If compression fails, write as uncompressed
             WriteUncompressedChunks(uncompressedData);

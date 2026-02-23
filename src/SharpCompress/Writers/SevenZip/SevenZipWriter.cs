@@ -53,6 +53,11 @@ public partial class SevenZipWriter : AbstractWriter
     /// </summary>
     public override void Write(string filename, Stream source, DateTime? modificationTime)
     {
+        if (finalized)
+        {
+            throw new ObjectDisposedException(nameof(SevenZipWriter), "Cannot write to a finalized archive.");
+        }
+
         filename = NormalizeFilename(filename);
         var progressStream = WrapWithProgress(source, filename);
 
@@ -80,7 +85,13 @@ public partial class SevenZipWriter : AbstractWriter
             sevenZipOptions.CompressionType,
             sevenZipOptions.LzmaProperties
         );
-        packedStreams.Add(packed);
+
+        // Check if the stream was actually empty (handles non-seekable streams with no data)
+        var actuallyEmpty = packed.Folder.GetUnpackSize() == 0;
+        if (!actuallyEmpty)
+        {
+            packedStreams.Add(packed);
+        }
 
         entries.Add(
             new SevenZipWriteEntry
@@ -88,7 +99,7 @@ public partial class SevenZipWriter : AbstractWriter
                 Name = filename,
                 ModificationTime = modificationTime,
                 IsDirectory = false,
-                IsEmpty = false,
+                IsEmpty = isEmpty || actuallyEmpty,
             }
         );
     }
@@ -98,6 +109,11 @@ public partial class SevenZipWriter : AbstractWriter
     /// </summary>
     public override void WriteDirectory(string directoryName, DateTime? modificationTime)
     {
+        if (finalized)
+        {
+            throw new ObjectDisposedException(nameof(SevenZipWriter), "Cannot write to a finalized archive.");
+        }
+
         directoryName = NormalizeFilename(directoryName);
         directoryName = directoryName.TrimEnd('/');
 
