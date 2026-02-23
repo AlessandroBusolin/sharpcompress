@@ -168,7 +168,7 @@ public class SevenZipWriterTests : TestBase
 
         using (var writer = new SevenZipWriter(
             archiveStream,
-            new SevenZipWriterOptions { IsLzma2 = true }
+            new SevenZipWriterOptions(CompressionType.LZMA2)
         ))
         {
             using var source = new MemoryStream(content);
@@ -206,7 +206,7 @@ public class SevenZipWriterTests : TestBase
 
         using (var writer = new SevenZipWriter(
             archiveStream,
-            new SevenZipWriterOptions { IsLzma2 = true }
+            new SevenZipWriterOptions(CompressionType.LZMA2)
         ))
         {
             foreach (var (name, text) in files)
@@ -251,7 +251,7 @@ public class SevenZipWriterTests : TestBase
 
         using (var writer = new SevenZipWriter(
             archiveStream,
-            new SevenZipWriterOptions { IsLzma2 = true }
+            new SevenZipWriterOptions(CompressionType.LZMA2)
         ))
         {
             using var source = new MemoryStream(content);
@@ -288,7 +288,7 @@ public class SevenZipWriterTests : TestBase
 
         using (var writer = new SevenZipWriter(
             archiveStream,
-            new SevenZipWriterOptions { IsLzma2 = true }
+            new SevenZipWriterOptions(CompressionType.LZMA2)
         ))
         {
             using var source = new MemoryStream(content);
@@ -309,6 +309,14 @@ public class SevenZipWriterTests : TestBase
             }
             Assert.Equal(content, output.ToArray());
         }
+    }
+
+    [Fact]
+    public void SevenZipWriter_UnsupportedCompressionType_Throws()
+    {
+        Assert.Throws<ArgumentException>(
+            () => new SevenZipWriterOptions(CompressionType.Deflate)
+        );
     }
 
     [Fact]

@@ -15,12 +15,22 @@ public sealed record SevenZipWriterOptions : IWriterOptions
     private int _compressionLevel;
 
     /// <summary>
-    /// The compression type to use. Supported: LZMA (default), LZMA2 (via CompressionType.LZMA with IsLzma2=true).
+    /// The compression type to use. Supported: LZMA and LZMA2 (default).
     /// </summary>
     public CompressionType CompressionType
     {
         get => _compressionType;
-        init => _compressionType = value;
+        init
+        {
+            if (value != CompressionType.LZMA && value != CompressionType.LZMA2)
+            {
+                throw new ArgumentException(
+                    $"SevenZipWriter only supports CompressionType.LZMA and CompressionType.LZMA2. Got: {value}",
+                    nameof(value)
+                );
+            }
+            _compressionType = value;
+        }
     }
 
     /// <summary>
@@ -55,11 +65,6 @@ public sealed record SevenZipWriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
-    /// Whether to use LZMA2 instead of LZMA. Default is false (LZMA).
-    /// </summary>
-    public bool IsLzma2 { get; init; }
-
-    /// <summary>
     /// Whether to compress the archive header itself using LZMA.
     /// Default is true, matching standard 7-Zip behavior.
     /// </summary>
@@ -71,11 +76,11 @@ public sealed record SevenZipWriterOptions : IWriterOptions
     public LzmaEncoderProperties? LzmaProperties { get; init; }
 
     /// <summary>
-    /// Creates a new SevenZipWriterOptions instance with LZMA compression.
+    /// Creates a new SevenZipWriterOptions instance with LZMA2 compression (default).
     /// </summary>
     public SevenZipWriterOptions()
     {
-        CompressionType = CompressionType.LZMA;
+        CompressionType = CompressionType.LZMA2;
     }
 
     /// <summary>
