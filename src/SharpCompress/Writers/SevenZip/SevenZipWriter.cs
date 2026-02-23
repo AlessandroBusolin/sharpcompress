@@ -79,7 +79,9 @@ public partial class SevenZipWriter : AbstractWriter
         }
 
         // Compress file data to output stream
-        var compressor = new SevenZipStreamsCompressor(OutputStream.NotNull());
+        var output = OutputStream.NotNull();
+        var outputPosBefore = output.Position;
+        var compressor = new SevenZipStreamsCompressor(output);
         var packed = compressor.Compress(
             progressStream,
             sevenZipOptions.CompressionType,
@@ -91,6 +93,13 @@ public partial class SevenZipWriter : AbstractWriter
         if (!actuallyEmpty)
         {
             packedStreams.Add(packed);
+        }
+        else
+        {
+            // Rewind output to erase orphaned encoder header/end-marker bytes
+            // so they don't shift subsequent pack stream offsets
+            output.Position = outputPosBefore;
+            output.SetLength(outputPosBefore);
         }
 
         entries.Add(
