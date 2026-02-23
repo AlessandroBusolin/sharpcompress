@@ -154,11 +154,16 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, I
     }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(
+    public ValueTask<IAsyncWriter> OpenAsyncWriter(
         Stream stream,
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
-    ) => (IAsyncWriter)OpenWriter(stream, writerOptions);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var writer = OpenWriter(stream, writerOptions);
+        return new((IAsyncWriter)writer);
+    }
 
     #endregion
 }

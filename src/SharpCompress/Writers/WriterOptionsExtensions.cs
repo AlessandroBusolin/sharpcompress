@@ -4,6 +4,7 @@ using SharpCompress.Common.Options;
 using SharpCompress.Compressors;
 using SharpCompress.Providers;
 using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.SevenZip;
 using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 
@@ -42,6 +43,7 @@ public static class WriterOptionsExtensions
             ZipWriterOptions zipOptions => zipOptions with { LeaveStreamOpen = leaveStreamOpen },
             TarWriterOptions tarOptions => tarOptions with { LeaveStreamOpen = leaveStreamOpen },
             GZipWriterOptions gzipOptions => gzipOptions with { LeaveStreamOpen = leaveStreamOpen },
+            SevenZipWriterOptions sevenZipOptions => sevenZipOptions with { LeaveStreamOpen = leaveStreamOpen },
             _ => throw new NotSupportedException(
                 $"Cannot set LeaveStreamOpen on options of type {options.GetType().Name}. "
                     + "Options must be a record type implementing IWriterOptions."
