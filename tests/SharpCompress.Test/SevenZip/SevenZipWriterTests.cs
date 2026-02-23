@@ -162,15 +162,9 @@ public class SevenZipWriterTests : TestBase
     [Fact]
     public void SevenZipWriter_LZMA2_ThrowsNotSupported()
     {
-        // LZMA2 encoding is not yet implemented in SharpCompress's LzmaStream
-        using var archiveStream = new MemoryStream();
-        using var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions { IsLzma2 = true }
+        Assert.Throws<ArgumentException>(
+            () => new SevenZipWriterOptions(CompressionType.LZMA2)
         );
-
-        using var source = new MemoryStream("test"u8.ToArray());
-        Assert.Throws<ArchiveOperationException>(() => writer.Write("test.txt", source, DateTime.UtcNow));
     }
 
     [Fact]
