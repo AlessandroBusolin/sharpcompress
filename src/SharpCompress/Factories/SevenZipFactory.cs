@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -5,15 +6,18 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Writers;
+using SharpCompress.Writers.SevenZip;
 
 namespace SharpCompress.Factories;
 
 /// <summary>
 /// Represents the foundation factory of 7Zip archive.
 /// </summary>
-public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
+public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IWriterFactory
 {
     #region IFactory
 
@@ -128,6 +132,37 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     {
         reader = null;
         return false;
+    }
+
+    #endregion
+
+    #region IWriterFactory
+
+    /// <inheritdoc/>
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
+    {
+        SevenZipWriterOptions sevenZipOptions = writerOptions switch
+        {
+            SevenZipWriterOptions szo => szo,
+            WriterOptions wo => new SevenZipWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or SevenZipWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new SevenZipWriter(stream, sevenZipOptions);
+    }
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncWriter> OpenAsyncWriter(
+        Stream stream,
+        IWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var writer = OpenWriter(stream, writerOptions);
+        return new((IAsyncWriter)writer);
     }
 
     #endregion
