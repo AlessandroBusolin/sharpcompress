@@ -32,7 +32,9 @@ public partial class SevenZipWriter : AbstractWriter
     {
         if (!destination.CanSeek)
         {
-            throw new ArchiveOperationException("7z writing requires a seekable stream for header back-patching.");
+            throw new ArchiveOperationException(
+                "7z writing requires a seekable stream for header back-patching."
+            );
         }
 
         sevenZipOptions = options;
@@ -55,7 +57,10 @@ public partial class SevenZipWriter : AbstractWriter
     {
         if (finalized)
         {
-            throw new ObjectDisposedException(nameof(SevenZipWriter), "Cannot write to a finalized archive.");
+            throw new ObjectDisposedException(
+                nameof(SevenZipWriter),
+                "Cannot write to a finalized archive."
+            );
         }
 
         filename = NormalizeFilename(filename);
@@ -120,7 +125,10 @@ public partial class SevenZipWriter : AbstractWriter
     {
         if (finalized)
         {
-            throw new ObjectDisposedException(nameof(SevenZipWriter), "Cannot write to a finalized archive.");
+            throw new ObjectDisposedException(
+                nameof(SevenZipWriter),
+                "Cannot write to a finalized archive."
+            );
         }
 
         directoryName = NormalizeFilename(directoryName);

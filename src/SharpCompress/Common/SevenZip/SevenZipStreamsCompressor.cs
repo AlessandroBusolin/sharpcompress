@@ -91,7 +91,12 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
     /// Copies data from source to destination while computing CRC32 of the source data.
     /// Uses Crc32Stream.Compute for CRC calculation to avoid duplicating the table/algorithm.
     /// </summary>
-    private static void CopyWithCrc(Stream source, Stream destination, out uint crc, out long bytesRead)
+    private static void CopyWithCrc(
+        Stream source,
+        Stream destination,
+        out uint crc,
+        out long bytesRead
+    )
     {
         var seed = Crc32Stream.DEFAULT_SEED;
         var buffer = new byte[81920];
@@ -102,7 +107,11 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         {
             // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
             // so passing ~result as next seed chains correctly.
-            seed = ~Crc32Stream.Compute(Crc32Stream.DEFAULT_POLYNOMIAL, seed, buffer.AsSpan(0, read));
+            seed = ~Crc32Stream.Compute(
+                Crc32Stream.DEFAULT_POLYNOMIAL,
+                seed,
+                buffer.AsSpan(0, read)
+            );
             destination.Write(buffer, 0, read);
             totalRead += read;
         }
@@ -143,5 +152,4 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
             CRCs = [outputCrc],
         };
     }
-
 }

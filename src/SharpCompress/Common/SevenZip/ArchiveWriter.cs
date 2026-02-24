@@ -41,7 +41,10 @@ internal static class ArchiveHeaderWriter
     /// Writes an encoded header - a StreamsInfo block that describes
     /// how to decompress the actual header data.
     /// </summary>
-    public static void WriteEncodedHeader(Stream stream, SevenZipStreamsInfoWriter headerStreamsInfo)
+    public static void WriteEncodedHeader(
+        Stream stream,
+        SevenZipStreamsInfoWriter headerStreamsInfo
+    )
     {
         stream.WriteByte((byte)BlockType.EncodedHeader);
         headerStreamsInfo.Write(stream);

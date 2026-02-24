@@ -162,14 +162,17 @@ public class SevenZipWriterTests : TestBase
     [Fact]
     public void SevenZipWriter_LZMA2_SingleFile_RoundTrip()
     {
-        var content = "Hello, LZMA2 world! This is a test of LZMA2 encoding in the SevenZipWriter."u8.ToArray();
+        var content =
+            "Hello, LZMA2 world! This is a test of LZMA2 encoding in the SevenZipWriter."u8.ToArray();
 
         using var archiveStream = new MemoryStream();
 
-        using (var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions(CompressionType.LZMA2)
-        ))
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions(CompressionType.LZMA2)
+            )
+        )
         {
             using var source = new MemoryStream(content);
             writer.Write("test.txt", source, DateTime.UtcNow);
@@ -204,10 +207,12 @@ public class SevenZipWriterTests : TestBase
 
         using var archiveStream = new MemoryStream();
 
-        using (var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions(CompressionType.LZMA2)
-        ))
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions(CompressionType.LZMA2)
+            )
+        )
         {
             foreach (var (name, text) in files)
             {
@@ -241,7 +246,9 @@ public class SevenZipWriterTests : TestBase
     {
         // Create 3MB of repeating pattern data - forces multi-chunk in LZMA2
         var content = new byte[3 * 1024 * 1024];
-        var pattern = Encoding.UTF8.GetBytes("This is a repeating pattern for LZMA2 compression testing. ");
+        var pattern = Encoding.UTF8.GetBytes(
+            "This is a repeating pattern for LZMA2 compression testing. "
+        );
         for (var i = 0; i < content.Length; i++)
         {
             content[i] = pattern[i % pattern.Length];
@@ -249,16 +256,21 @@ public class SevenZipWriterTests : TestBase
 
         using var archiveStream = new MemoryStream();
 
-        using (var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions(CompressionType.LZMA2)
-        ))
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions(CompressionType.LZMA2)
+            )
+        )
         {
             using var source = new MemoryStream(content);
             writer.Write("large.bin", source, DateTime.UtcNow);
         }
 
-        Assert.True(archiveStream.Length < content.Length, "Archive should be smaller than uncompressed data");
+        Assert.True(
+            archiveStream.Length < content.Length,
+            "Archive should be smaller than uncompressed data"
+        );
 
         archiveStream.Position = 0;
         using (var archive = (SevenZipArchive)SevenZipArchive.OpenArchive(archiveStream))
@@ -286,10 +298,12 @@ public class SevenZipWriterTests : TestBase
 
         using var archiveStream = new MemoryStream();
 
-        using (var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions(CompressionType.LZMA2)
-        ))
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions(CompressionType.LZMA2)
+            )
+        )
         {
             using var source = new MemoryStream(content);
             writer.Write("random.bin", source, DateTime.UtcNow);
@@ -314,9 +328,7 @@ public class SevenZipWriterTests : TestBase
     [Fact]
     public void SevenZipWriter_UnsupportedCompressionType_Throws()
     {
-        Assert.Throws<ArgumentException>(
-            () => new SevenZipWriterOptions(CompressionType.Deflate)
-        );
+        Assert.Throws<ArgumentException>(() => new SevenZipWriterOptions(CompressionType.Deflate));
     }
 
     [Fact]
@@ -327,10 +339,12 @@ public class SevenZipWriterTests : TestBase
         using var archiveStream = new MemoryStream();
 
         // Write archive with uncompressed header
-        using (var writer = new SevenZipWriter(
-            archiveStream,
-            new SevenZipWriterOptions { CompressHeader = false }
-        ))
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions { CompressHeader = false }
+            )
+        )
         {
             using var source = new MemoryStream(content);
             writer.Write("rawheader.txt", source, DateTime.UtcNow);
@@ -360,11 +374,13 @@ public class SevenZipWriterTests : TestBase
         using var archiveStream = new MemoryStream();
 
         // Write via WriterFactory
-        using (var writer = WriterFactory.OpenWriter(
-            archiveStream,
-            ArchiveType.SevenZip,
-            new SevenZipWriterOptions()
-        ))
+        using (
+            var writer = WriterFactory.OpenWriter(
+                archiveStream,
+                ArchiveType.SevenZip,
+                new SevenZipWriterOptions()
+            )
+        )
         {
             using var source = new MemoryStream(content);
             writer.Write("factory.txt", source, DateTime.UtcNow);
@@ -391,7 +407,9 @@ public class SevenZipWriterTests : TestBase
     {
         // Create 100KB of repeating pattern data (compresses well)
         var content = new byte[100 * 1024];
-        var pattern = Encoding.UTF8.GetBytes("This is a repeating pattern for compression testing. ");
+        var pattern = Encoding.UTF8.GetBytes(
+            "This is a repeating pattern for compression testing. "
+        );
         for (var i = 0; i < content.Length; i++)
         {
             content[i] = pattern[i % pattern.Length];
@@ -407,7 +425,10 @@ public class SevenZipWriterTests : TestBase
         }
 
         // Verify compressed size is smaller than original
-        Assert.True(archiveStream.Length < content.Length, "Archive should be smaller than uncompressed data");
+        Assert.True(
+            archiveStream.Length < content.Length,
+            "Archive should be smaller than uncompressed data"
+        );
 
         // Read back and verify
         archiveStream.Position = 0;
@@ -430,8 +451,8 @@ public class SevenZipWriterTests : TestBase
     public void SevenZipWriter_RequiresSeekableStream()
     {
         var nonSeekable = new NonSeekableStream();
-        Assert.Throws<ArchiveOperationException>(
-            () => new SevenZipWriter(nonSeekable, new SevenZipWriterOptions())
+        Assert.Throws<ArchiveOperationException>(() =>
+            new SevenZipWriter(nonSeekable, new SevenZipWriterOptions())
         );
     }
 

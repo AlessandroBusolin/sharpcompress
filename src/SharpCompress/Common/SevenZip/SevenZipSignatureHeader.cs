@@ -62,7 +62,11 @@ internal static class SevenZipSignatureHeaderWriter
         BinaryPrimitives.WriteUInt32LittleEndian(startHeader.AsSpan(16, 4), nextHeaderCrc);
 
         // CRC32 of StartHeader
-        var startHeaderCrc = Crc32Stream.Compute(Crc32Stream.DEFAULT_POLYNOMIAL, Crc32Stream.DEFAULT_SEED, startHeader);
+        var startHeaderCrc = Crc32Stream.Compute(
+            Crc32Stream.DEFAULT_POLYNOMIAL,
+            Crc32Stream.DEFAULT_SEED,
+            startHeader
+        );
 
         // Assemble full 32-byte header
         var header = new byte[HeaderSize];

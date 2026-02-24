@@ -149,7 +149,10 @@ internal sealed class SevenZipFilesInfoWriter
                     if (Entries[i].ModificationTime is { } mtime)
                     {
                         var fileTime = (ulong)mtime.ToUniversalTime().ToFileTimeUtc();
-                        System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(buf, fileTime);
+                        System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(
+                            buf,
+                            fileTime
+                        );
                         s.Write(buf, 0, 8);
                     }
                 }
@@ -206,7 +209,11 @@ internal sealed class SevenZipFilesInfoWriter
     /// Writes a file property block: PropertyID + size + data.
     /// Size is computed by writing to a temporary buffer first.
     /// </summary>
-    private static void WriteFileProperty(Stream stream, BlockType propertyId, Action<Stream> writeData)
+    private static void WriteFileProperty(
+        Stream stream,
+        BlockType propertyId,
+        Action<Stream> writeData
+    )
     {
         using var dataStream = new MemoryStream();
         writeData(dataStream);

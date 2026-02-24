@@ -43,7 +43,10 @@ public static class WriterOptionsExtensions
             ZipWriterOptions zipOptions => zipOptions with { LeaveStreamOpen = leaveStreamOpen },
             TarWriterOptions tarOptions => tarOptions with { LeaveStreamOpen = leaveStreamOpen },
             GZipWriterOptions gzipOptions => gzipOptions with { LeaveStreamOpen = leaveStreamOpen },
-            SevenZipWriterOptions sevenZipOptions => sevenZipOptions with { LeaveStreamOpen = leaveStreamOpen },
+            SevenZipWriterOptions sevenZipOptions => sevenZipOptions with
+            {
+                LeaveStreamOpen = leaveStreamOpen,
+            },
             _ => throw new NotSupportedException(
                 $"Cannot set LeaveStreamOpen on options of type {options.GetType().Name}. "
                     + "Options must be a record type implementing IWriterOptions."

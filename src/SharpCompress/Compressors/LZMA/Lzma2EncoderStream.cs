@@ -82,8 +82,7 @@ internal sealed class Lzma2EncoderStream : Stream
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
@@ -129,7 +128,10 @@ internal sealed class Lzma2EncoderStream : Stream
         }
 
         // Check if compressed output fits in a single chunk and is actually smaller
-        if (compressed.Length <= MAX_COMPRESSED_CHUNK_SIZE && compressed.Length < uncompressedData.Length)
+        if (
+            compressed.Length <= MAX_COMPRESSED_CHUNK_SIZE
+            && compressed.Length < uncompressedData.Length
+        )
         {
             WriteCompressedChunk(uncompressedData.Length, compressed);
         }
@@ -141,11 +143,7 @@ internal sealed class Lzma2EncoderStream : Stream
 
     private byte[] CompressBlock(ReadOnlySpan<byte> data)
     {
-        var encoderProps = new LzmaEncoderProperties(
-            eos: false,
-            _dictionarySize,
-            _numFastBytes
-        );
+        var encoderProps = new LzmaEncoderProperties(eos: false, _dictionarySize, _numFastBytes);
 
         var encoder = new Encoder();
         encoder.SetCoderProperties(encoderProps.PropIDs, encoderProps.Properties);
