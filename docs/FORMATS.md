@@ -22,12 +22,12 @@
 | Tar.LZip               | LZMA                                              | Both                | TarArchive      | TarReader  | TarWriter (3) |
 | Tar.XZ                 | LZMA2                                             | Decompress          | TarArchive      | TarReader  | TarWriter (3) |
 | GZip (single file)     | DEFLATE                                           | Both                | GZipArchive     | GZipReader | GZipWriter    |
-| 7Zip (4)               | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate      | Decompress          | SevenZipArchive | N/A        | N/A           |
+| 7Zip (4)               | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate      | Both                | SevenZipArchive | N/A        | SevenZipWriter |
 
 1. SOLID Rars are only supported in the RarReader API.
 2. Zip format supports pkware and WinzipAES encryption. However, encrypted LZMA is not supported. Zip64 reading/writing is supported but only with seekable streams as the Zip spec doesn't support Zip64 data in post data descriptors. Deflate64 is only supported for reading. See [Zip Format Notes](#zip-format-notes) for details on multi-volume archives and streaming behavior.
 3. The Tar format requires a file size in the header. If no size is specified to the TarWriter and the stream is not seekable, then an exception will be thrown.
-4. The 7Zip format doesn't allow for reading as a forward-only stream so 7Zip is only supported through the Archive API. See [7Zip Format Notes](#7zip-format-notes) for details on async extraction behavior.
+4. The 7Zip format doesn't allow for reading as a forward-only stream, so 7Zip read support is only through the Archive API. Writing is supported through SevenZipWriter for non-solid archives with LZMA/LZMA2 and requires a seekable output stream. See [7Zip Format Notes](#7zip-format-notes) for details on async extraction behavior.
 5. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
 
 ### Zip Format Notes
